@@ -9,7 +9,7 @@ def extract_title(markdown):
     raise Exception("No H1 header found in markdown")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath="/"):
     import os
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
     # Read markdown
@@ -25,6 +25,11 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(markdown)
     # Replace placeholders
     page = template.replace('{{ Title }}', title).replace('{{ Content }}', html)
+    
+    # Replace absolute paths with basepath
+    page = page.replace('href="/', f'href="{basepath}')
+    page = page.replace('src="/', f'src="{basepath}')
+    
     # Ensure destination directory exists
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     # Write output
@@ -32,7 +37,7 @@ def generate_page(from_path, template_path, dest_path):
         f.write(page)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
     import os
     
     # Get all entries in the content directory
@@ -47,7 +52,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 dest_file_path = os.path.join(dest_dir_path, html_filename)
                 
                 # Generate the page
-                generate_page(entry_path, template_path, dest_file_path)
+                generate_page(entry_path, template_path, dest_file_path, basepath)
         else:
             # If it's a directory, recurse into it
             # Create corresponding directory in destination
@@ -55,4 +60,4 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
             os.makedirs(dest_subdir, exist_ok=True)
             
             # Recursively process the subdirectory
-            generate_pages_recursive(entry_path, template_path, dest_subdir)
+            generate_pages_recursive(entry_path, template_path, dest_subdir, basepath)
